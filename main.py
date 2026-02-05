@@ -37,11 +37,11 @@ def get_seats_with_config(user_config, date_config, seat_config):
 
     target_config = seat_config[seat_name]
 
-    # 优先读取 'ids' 列表
+    # 优先读取ids列表
     if 'ids' in target_config and target_config['ids']:
         return target_config['ids']
 
-    # 使用 'begin' - 'end' 范围
+    # 使用begin-end
     return list(range(target_config['begin'], target_config['end']))
 
 
