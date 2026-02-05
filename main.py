@@ -27,9 +27,22 @@ time_zone = 8  # 时区
 def get_seats_with_config(user_config, date_config, seat_config):
     # 二楼东/二楼西/四楼/三楼大厅/守正书院/求新书院/自定义
     seat_name = date_config['name']
+    
+    # 处理自定义座位
     if seat_name == "自定义":
-        return user_config['自定义']
-    return list(range(seat_config[seat_name]['begin'], seat_config[seat_name]['end']))
+        custom_val = user_config['自定义']
+        if isinstance(custom_val, list):
+            return custom_val
+        return [custom_val]
+
+    target_config = seat_config[seat_name]
+
+    # 优先读取 'ids' 列表
+    if 'ids' in target_config and target_config['ids']:
+        return target_config['ids']
+
+    # 使用 'begin' - 'end' 范围
+    return list(range(target_config['begin'], target_config['end']))
 
 
 class SeatAutoBooker:
