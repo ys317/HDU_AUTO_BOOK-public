@@ -118,46 +118,37 @@ class SeatAutoBooker:
         self.json = json.loads(self.resp.text)
         return self.json["CODE"], self.json["MESSAGE"] + " 座位:{}".format(seat)
 
-   def login(self):
+    def login(self):
         logging.info('Login in (GitHub Actions Mode)...')
-        max_retries = 3
-        
-        for attempt in range(1, max_retries + 1):
-            try:
+        try:
+            self.driver.get("https://hdu.huitu.zhishulib.com/")
+            
+            self.wait.until(EC.presence_of_element_located((By.NAME, "username")))
+            user_input = self.driver.find_element(By.NAME, "username")           
+            pwd_input = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
+            login_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
 
-                self.driver.get("https://hdu.huitu.zhishulib.com/")
-                self.wait.until(EC.presence_of_element_located((By.NAME, "username")))
+            user_input.clear()
+            user_input.send_keys(self.un)
+            pwd_input.clear()
+            pwd_input.send_keys(self.pd)
 
-                user_input = self.driver.find_element(By.NAME, "username")
-                pwd_input = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
-                login_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+            self.driver.execute_script("arguments[0].click();", login_btn)
+            time.sleep(8)
+            
+            cookie_list = self.driver.get_cookies()
+            self.cookie = ";".join([item["name"] + "=" + item["value"] + "" for item in cookie_list])
+            self.cfg["headers"]['Cookie'] = self.cookie
 
-                user_input.clear()
-                user_input.send_keys(self.un)
-                pwd_input.clear()
-                pwd_input.send_keys(self.pd)
-
-                self.driver.execute_script("arguments[0].click();", login_btn)
-                time.sleep(5)
-                
-                cookie_list = self.driver.get_cookies()
-                self.cookie = ";".join([item["name"] + "=" + item["value"] + "" for item in cookie_list])
-                self.cfg["headers"]['Cookie'] = self.cookie
-
-                if len(cookie_list) > 0:
-                    logging.info("登录成功")
-                    return 0
-                else:
-                    raise Exception("Cookie获取失败")
-
-            except Exception as e:
-                if attempt < max_retries:
-                    logging.warning(f"登录尝试 {attempt} 失败，3秒后重试...")
-                    time.sleep(3)
-                else:
-                    logging.error(f"登录彻底失败: {e}")
-                    return -1
-        return -1
+            if len(cookie_list) > 0:
+                logging.info("Cookie 获取成功")
+            else:
+                logging.error("Cookie 获取失败")
+                return -1
+        except Exception as e:
+            logging.error(f"登录失败: {e}")
+            return -1
+        return 0
 
     def get_user_info(self):
         logging.info('Getting user info')
